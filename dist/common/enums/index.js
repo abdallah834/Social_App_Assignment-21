@@ -22,3 +22,4 @@ __exportStar(require("./audience.enums"), exports);
 __exportStar(require("./devicesLogout.enums"), exports);
 __exportStar(require("./multer.enums"), exports);
 __exportStar(require("./post.enums"), exports);
+__exportStar(require("./chat.enum"), exports);

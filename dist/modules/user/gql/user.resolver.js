@@ -13,7 +13,7 @@ class UserResolver {
     constructor() {
         this.userService = user_service_1.default;
     }
-    profile = async (parent, args, { user, decodedToken }) => {
+    profile = async (parent, args, { user, decoded }) => {
         (0, middleware_1.GQLAuthorization)(user_authorization_1.endpoint.profile, user);
         await (0, middleware_1.GqlValidation)(user_valdation_1.profileGQLValidation, args);
         const data = await this.userService.profile(user);

@@ -23,7 +23,7 @@ exports.singlePostType = new graphql_1.GraphQLObjectType({
             type: new graphql_1.GraphQLList(user_types_gql_1.OneUserType),
         },
         tags: {
-            type: new graphql_1.GraphQLList(graphql_1.GraphQLID),
+            type: new graphql_1.GraphQLList(user_types_gql_1.OneUserType),
         },
         availability: { type: exports.gqlAvailabilityEnum },
         createdBy: { type: new graphql_1.GraphQLNonNull(user_types_gql_1.OneUserType) },

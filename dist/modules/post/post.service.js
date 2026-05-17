@@ -9,6 +9,7 @@ const services_1 = require("../../common/services");
 const post_1 = require("../../common/utils/post");
 const repository_1 = require("../../DB/repository");
 const s3_service_1 = require("./../../common/services/aws-sdk/s3.service");
+const realtime_1 = require("../realtime");
 class PostService {
     populate = [
         {
@@ -16,6 +17,9 @@ class PostService {
         },
         {
             path: "tags",
+        },
+        {
+            path: "createdBy",
         },
         {
             path: "comments",
@@ -27,12 +31,14 @@ class PostService {
     notification;
     postRepo;
     s3;
+    realTime;
     constructor() {
         this.userRepo = new repository_1.UserRepo();
         this.redis = services_1.redisService;
         this.postRepo = new repository_1.PostRepo();
         this.notification = services_1.notificationService;
         this.s3 = s3_service_1.s3Service;
+        this.realTime = realtime_1.realtimeGateway;
     }
     async createPost({ availability, content, files, tags }, user) {
         const mentions = [];
@@ -219,10 +225,12 @@ class PostService {
         return posts;
     }
     async reactToPost({ postId }, { react }, user) {
+        const reactAsNumber = Number(react);
+        console.log(user);
         const post = await this.postRepo.findOneAndUpdate({
             filter: { _id: postId, $or: (0, post_1.getPostsAvailability)(user) },
             update: {
-                ...(Number(react) > enums_1.ReactEnums.REMOVE_LIKE
+                ...(reactAsNumber > enums_1.ReactEnums.REMOVE_LIKE
                     ? { $addToSet: { likes: user._id } }
                     : { $pull: { likes: user._id } }),
             },
@@ -230,6 +238,14 @@ class PostService {
         });
         if (!post) {
             throw new exceptions_1.NotFoundException("You are not eligible to like this user's post");
+        }
+        const postOwner = post.createdBy;
+        const socketIds = await this.redis.getSockets(postOwner._id);
+        if (socketIds.length || reactAsNumber > 1) {
+            this.realTime
+                .getIo()
+                .to(socketIds)
+                .emit("likePost", { postId, userId: user._id, reactAsNumber });
         }
         return post.toJSON();
     }

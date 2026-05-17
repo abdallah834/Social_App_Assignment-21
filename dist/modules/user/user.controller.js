@@ -11,7 +11,9 @@ const multer_1 = require("../../common/utils/multer");
 const middleware_1 = require("../../middleware");
 const user_authorization_1 = require("./user.authorization");
 const user_service_1 = __importDefault(require("./user.service"));
+const chat_1 = require("../chat");
 const router = (0, express_1.Router)();
+router.use("/:userId/chat", chat_1.chatRouter);
 router.get("/profile", (0, middleware_1.authentication)(), (0, middleware_1.authorization)(user_authorization_1.endpoint.profile), async (req, res, next) => {
     const data = await user_service_1.default.profile(req.user);
     return (0, response_1.successResponse)({ res, data });
@@ -30,7 +32,7 @@ router.post("/rotateToken", (0, middleware_1.authentication)(enums_1.TokenType.R
     const data = await user_service_1.default.rotateToken(req.user, req.decoded, `${req.protocol}://${req.host}`);
     return (0, response_1.successResponse)({
         res,
-        message: "Updated profile image successfully",
+        message: "Token rotation done",
         data,
     });
 });

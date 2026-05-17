@@ -5,29 +5,39 @@ const config_1 = require("../../common/config/config");
 const enums_1 = require("../../common/enums");
 const exceptions_1 = require("../../common/exceptions");
 const services_1 = require("../../common/services");
+const repository_1 = require("../../DB/repository");
 const user_repo_1 = require("../../DB/repository/user.repo");
 class UserService {
     userRepo;
     redis;
     tokenService;
     s3;
+    chatRepo;
     constructor() {
         this.userRepo = new user_repo_1.UserRepo();
         this.tokenService = new services_1.TokenService();
         this.redis = services_1.redisService;
         this.s3 = services_1.s3Service;
+        this.chatRepo = new repository_1.ChatRepo();
     }
     async profile(user) {
         const userProfile = await this.userRepo.findOne({
             filter: {
                 _id: user._id,
             },
+            projection: "username email coverImages firstName lastName friends",
             options: { populate: [{ path: "friends" }] },
         });
         if (!userProfile) {
             throw new exceptions_1.NotFoundException("No user matches this info");
         }
-        return userProfile.toJSON();
+        const groups = await this.chatRepo.find({
+            filter: {
+                participants: { $in: [user._id] },
+                type: enums_1.ChatParticipantsEnum.ovm,
+            },
+        });
+        return { user: userProfile.toJSON(), groups };
     }
     async profileImage({ ContentType, originalName, }, user) {
         const { url } = await this.s3.createPresignedUploadLink({
@@ -79,13 +89,13 @@ class UserService {
         return statusCode;
     }
     async rotateToken(user, { sub, jti, iat, }, issuer) {
-        if (Date.now() - iat < 25 * 60 * 1000) {
+        if (Date.now() - iat * 1000 >= 25 * 60 * 1000) {
             throw new exceptions_1.ConflictException("Current access token is still valid");
         }
         await this.tokenService.createRevokeToken({
             userId: sub,
             jti,
-            ttl: iat + Number(config_1.REFRESH_TOKEN_EXPIRATION_TIME),
+            ttl: Number(iat) + Number(config_1.REFRESH_TOKEN_EXPIRATION_TIME),
         });
         return await this.tokenService.createLoginTokens(user, issuer);
     }

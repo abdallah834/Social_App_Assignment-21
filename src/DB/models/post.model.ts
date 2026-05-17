@@ -19,7 +19,8 @@ const postSchema = new Schema<IPost>(
       default: AvailabilityEnum.PUBLIC,
     },
     likes: {
-      type: [{ user: Types.ObjectId, react: Number }],
+      // type: [{ user: Types.ObjectId, react: Number }],
+      type: [{ type: Types.ObjectId }],
       ref: "User",
       default: [],
       _id: false,

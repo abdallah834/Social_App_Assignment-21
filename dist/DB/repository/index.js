@@ -18,3 +18,4 @@ __exportStar(require("./base.repo"), exports);
 __exportStar(require("./post.repo"), exports);
 __exportStar(require("./user.repo"), exports);
 __exportStar(require("./comment.repo"), exports);
+__exportStar(require("./chat.repo"), exports);

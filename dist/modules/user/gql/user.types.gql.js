@@ -30,8 +30,7 @@ exports.OneUserType = new graphql_1.GraphQLObjectType({
         _id: {
             type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLID),
             resolve: (parent) => {
-                console.log(parent);
-                return parent.username;
+                return parent._id;
             },
         },
         firstName: { type: new graphql_1.GraphQLNonNull(graphql_1.GraphQLString) },
